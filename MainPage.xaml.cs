@@ -61,7 +61,7 @@ namespace picturme_wp7
             // send code to pictur.me server
 
 
-            WebRequest wr = WebRequest.Create("http://pictur.me/upload");
+            WebRequest wr = WebRequest.Create("http://pictur.me/upload.ajax");
             wr.Method = "POST";
 
             RequestState rs = new RequestState()
