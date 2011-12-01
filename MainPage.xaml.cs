@@ -13,6 +13,8 @@ using Microsoft.Phone.Controls;
 using Microsoft.Phone.Tasks;
 using Microsoft.Xna.Framework.Media;
 using System.Windows.Media.Imaging;
+using System.IO;
+using System.Text;
 
 namespace picturme_wp7
 {
@@ -22,6 +24,7 @@ namespace picturme_wp7
         CameraCaptureTask camera;
         Picture p;
         BitmapImage i;
+        Stream s;
 
         // Constructor
         public MainPage()
@@ -30,6 +33,10 @@ namespace picturme_wp7
 
             camera = new CameraCaptureTask();
             camera.Completed += new EventHandler<PhotoResult>(camera_Completed);
+
+            i = new BitmapImage();
+
+            image1.Source = i;
         }
 
         private void button1_Click(object sender, RoutedEventArgs e)
@@ -43,9 +50,67 @@ namespace picturme_wp7
             if (e.TaskResult == TaskResult.OK)
             {
                 i = new BitmapImage();
-                i.SetSource(e.ChosenPhoto);
+                s = e.ChosenPhoto;
+                i.SetSource(s);
                 image1.Source = i;
             }
         }
+
+        private void button2_Click(object sender, RoutedEventArgs e)
+        {
+            // send code to pictur.me server
+
+
+            WebRequest wr = WebRequest.Create("http://pictur.me/upload");
+            wr.Method = "POST";
+
+            RequestState rs = new RequestState()
+            {
+                webRequest = wr,
+                data = s
+            };
+
+            wr.BeginGetRequestStream(new AsyncCallback(SendData), rs);
+
+        }
+
+        private static void SendData(IAsyncResult asyncResult)
+        {
+            RequestState rs = (RequestState)asyncResult.AsyncState;
+
+
+            MemoryStream ms = new MemoryStream();
+            rs.data.CopyTo(ms);
+            byte[] c = ms.ToArray();
+
+            Stream postStream = rs.webRequest.EndGetRequestStream(asyncResult);
+
+            postStream.Write(c, 0, c.Length);
+            postStream.Close();
+
+            rs.webRequest.BeginGetResponse(new AsyncCallback(RecieveImage), rs);
+        }
+
+        private static void RecieveImage(IAsyncResult asyncResult)
+        {
+
+            RequestState rs = (RequestState)asyncResult.AsyncState;
+            WebResponse wr;
+
+            wr = (WebResponse)rs.webRequest.EndGetResponse(asyncResult);
+            Stream rStream = wr.GetResponseStream();
+            StreamReader sr = new StreamReader(rStream);
+            var res = sr.ReadToEnd();
+            rStream.Close();
+            sr.Close();
+            wr.Close();
+
+        }
+    }
+
+    public class RequestState
+    {
+        public WebRequest webRequest;
+        public Stream data;
     }
 }
