@@ -28,8 +28,14 @@
 
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-            <Image Height="523" HorizontalAlignment="Left" Margin="6,6,0,0" Name="image1" VerticalAlignment="Top" Width="450" />
-            <Button Content="Button" Height="72" HorizontalAlignment="Left" Margin="0,535,0,0" Name="button1" VerticalAlignment="Top" Width="450" Click="button1_Click" />
+            <Grid.RowDefinitions>
+                <RowDefinition Height="457*" />
+                <RowDefinition Height="72*" />
+                <RowDefinition Height="78*" />
+            </Grid.RowDefinitions>
+            <Image Height="457" HorizontalAlignment="Left" Name="image1" Stretch="Fill" VerticalAlignment="Top" Width="450" />
+            <Button Content="Take Picture!" Grid.Row="1" Height="72" HorizontalAlignment="Left" Name="button1" VerticalAlignment="Bottom" Width="456" Click="button1_Click" />
+            <Button Content="MOSAICIFY!" Grid.Row="2" Height="72" HorizontalAlignment="Left" Name="button2" VerticalAlignment="Bottom" Width="456" />
         </Grid>
     </Grid>
  
