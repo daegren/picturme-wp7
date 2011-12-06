@@ -15,6 +15,8 @@ using Microsoft.Xna.Framework.Media;
 using System.Windows.Media.Imaging;
 using System.IO;
 using System.Text;
+using System.Runtime.Serialization;
+using System.Json;
 
 namespace picturme_wp7
 {
@@ -75,7 +77,7 @@ namespace picturme_wp7
 
         }
 
-        private static void SendData(IAsyncResult asyncResult)
+        private void SendData(IAsyncResult asyncResult)
         {
             RequestState rs = (RequestState)asyncResult.AsyncState;
 
@@ -92,7 +94,7 @@ namespace picturme_wp7
             rs.webRequest.BeginGetResponse(new AsyncCallback(RecieveImage), rs);
         }
 
-        private static void RecieveImage(IAsyncResult asyncResult)
+        private void RecieveImage(IAsyncResult asyncResult)
         {
 
             RequestState rs = (RequestState)asyncResult.AsyncState;
@@ -101,11 +103,19 @@ namespace picturme_wp7
             wr = (WebResponse)rs.webRequest.EndGetResponse(asyncResult);
             Stream rStream = wr.GetResponseStream();
             StreamReader sr = new StreamReader(rStream);
-            var res = sr.ReadToEnd();
+            String res = sr.ReadToEnd();
             rStream.Close();
             sr.Close();
             wr.Close();
 
+            DisplayImage(res);
+
+        }
+
+        private void DisplayImage(string res)
+        {
+            JsonValue jv = JsonArray.Parse(res);
+            
         }
     }
 
