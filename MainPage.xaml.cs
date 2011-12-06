@@ -61,8 +61,9 @@ namespace picturme_wp7
             // send code to pictur.me server
 
 
-            WebRequest wr = WebRequest.Create("http://pictur.me/upload.ajax");
+            WebRequest wr = WebRequest.Create("http://local.pictur.me/v1/upload");
             wr.Method = "POST";
+            wr.ContentType = "application/x-www-form-urlencoded";
 
             RequestState rs = new RequestState()
             {
@@ -78,7 +79,7 @@ namespace picturme_wp7
         {
             RequestState rs = (RequestState)asyncResult.AsyncState;
 
-
+            rs.data.Position = 0; // rest position to read file in its entirety
             MemoryStream ms = new MemoryStream();
             rs.data.CopyTo(ms);
             byte[] c = ms.ToArray();
