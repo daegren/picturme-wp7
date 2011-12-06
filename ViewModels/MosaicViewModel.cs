@@ -11,6 +11,7 @@ using System.Windows.Shapes;
 using System.ComponentModel;
 using Microsoft.Xna.Framework.Media;
 using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace picturme_wp7
 {
@@ -19,7 +20,11 @@ namespace picturme_wp7
         private Stream _mosaicData;
         public Stream MosaicData
         {
-            get { return _mosaicData; }
+            get
+            {
+                _mosaicData.Position = 0;
+                return _mosaicData;
+            }
             set
             {
                 if (value != _mosaicData)
@@ -33,15 +38,30 @@ namespace picturme_wp7
         private Stream _originalImageData;
         public Stream OriginalImageData
         {
-            get { return _originalImageData; }
+            get
+            {
+                _originalImageData.Position = 0;
+                return _originalImageData;
+            }
             set
             {
                 if (value != _originalImageData)
                 {
                     _originalImageData = value;
+                    if (null == _originalImage)
+                    {
+                        _originalImage = new BitmapImage();
+                    }
+                    _originalImage.SetSource(_originalImageData);
                     NotifyPropertyChanged("OriginalImageData");
                 }
             }
+        }
+
+        private BitmapImage _originalImage;
+        public BitmapImage OriginalImage
+        {
+            get { return _originalImage; }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

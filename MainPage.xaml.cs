@@ -39,10 +39,6 @@ namespace picturme_wp7
 
             camera = new CameraCaptureTask();
             camera.Completed += new EventHandler<PhotoResult>(camera_Completed);
-
-            i = new BitmapImage();
-
-            image1.Source = i;
         }
 
         private void button1_Click(object sender, RoutedEventArgs e)
@@ -54,10 +50,7 @@ namespace picturme_wp7
         {
             if (e.TaskResult == TaskResult.OK)
             {
-                i = new BitmapImage();
-                s = e.ChosenPhoto;
-                i.SetSource(s);
-                image1.Source = i;
+                (this.DataContext as MosaicViewModel).OriginalImageData = e.ChosenPhoto;
             }
         }
 
@@ -73,20 +66,20 @@ namespace picturme_wp7
             RequestState rs = new RequestState()
             {
                 webRequest = wr,
-                data = s
+                data = DataContext as MosaicViewModel
             };
 
             wr.BeginGetRequestStream(new AsyncCallback(SendData), rs);
-
+            NavigationService.Navigate(new Uri("/MosaicDetail.xaml", UriKind.Relative));
         }
 
         private void SendData(IAsyncResult asyncResult)
         {
             RequestState rs = (RequestState)asyncResult.AsyncState;
 
-            rs.data.Position = 0; // rest position to read file in its entirety
+            rs.data.OriginalImageData.Position = 0; // rest position to read file in its entirety
             MemoryStream ms = new MemoryStream();
-            rs.data.CopyTo(ms);
+            rs.data.OriginalImageData.CopyTo(ms);
             byte[] c = ms.ToArray();
 
             Stream postStream = rs.webRequest.EndGetRequestStream(asyncResult);
@@ -120,7 +113,7 @@ namespace picturme_wp7
             JsonValue jv = JsonArray.Parse(res);
             if (bool.Parse(jv["success"]))
             {
-                NavigationService.Navigate(new Uri("/MosaicDetail.xaml?url=" + host + jv["image"]));
+                
             }
         }
     }
@@ -128,6 +121,6 @@ namespace picturme_wp7
     public class RequestState
     {
         public WebRequest webRequest;
-        public Stream data;
+        public MosaicViewModel data;
     }
 }
