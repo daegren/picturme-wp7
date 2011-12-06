@@ -28,10 +28,14 @@ namespace picturme_wp7
         BitmapImage i;
         Stream s;
 
+        private static String host = "http://10.108.120.73:8181/";
+
         // Constructor
         public MainPage()
         {
             InitializeComponent();
+
+            DataContext = App.ViewModel;
 
             camera = new CameraCaptureTask();
             camera.Completed += new EventHandler<PhotoResult>(camera_Completed);
@@ -44,7 +48,6 @@ namespace picturme_wp7
         private void button1_Click(object sender, RoutedEventArgs e)
         {
             camera.Show();
-            Console.Out.Write("test: this should show after the camera is finished?");
         }
 
         void camera_Completed(object sender, PhotoResult e)
@@ -63,7 +66,7 @@ namespace picturme_wp7
             // send code to pictur.me server
 
 
-            WebRequest wr = WebRequest.Create("http://local.pictur.me/v1/upload");
+            WebRequest wr = WebRequest.Create(host + "v1/upload");
             wr.Method = "POST";
             wr.ContentType = "application/x-www-form-urlencoded";
 
@@ -115,7 +118,10 @@ namespace picturme_wp7
         private void DisplayImage(string res)
         {
             JsonValue jv = JsonArray.Parse(res);
-            
+            if (bool.Parse(jv["success"]))
+            {
+                NavigationService.Navigate(new Uri("/MosaicDetail.xaml?url=" + host + jv["image"]));
+            }
         }
     }
 
