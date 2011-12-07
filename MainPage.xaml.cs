@@ -11,116 +11,65 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Tasks;
-using Microsoft.Xna.Framework.Media;
 using System.Windows.Media.Imaging;
-using System.IO;
 using System.Text;
-using System.Runtime.Serialization;
-using System.Json;
+using System.IO;
 
 namespace picturme_wp7
 {
     public partial class MainPage : PhoneApplicationPage
     {
-
         CameraCaptureTask camera;
-        Picture p;
-        BitmapImage i;
-        Stream s;
+        PhotoChooserTask librarySelect;
 
-        private static String host = "http://10.108.120.73:8181/";
+        BitmapImage takenImage;
 
-        // Constructor
         public MainPage()
         {
             InitializeComponent();
-
-            DataContext = App.ViewModel;
-
             camera = new CameraCaptureTask();
             camera.Completed += new EventHandler<PhotoResult>(camera_Completed);
+
+            librarySelect = new PhotoChooserTask();
+            librarySelect.Completed += new EventHandler<PhotoResult>(librarySelect_Completed);
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
+        void librarySelect_Completed(object sender, PhotoResult e)
         {
-            camera.Show();
+            if (e.TaskResult == TaskResult.OK)
+            {
+                takenImage = new BitmapImage();
+                takenImage.SetSource(e.ChosenPhoto);
+            }
         }
 
         void camera_Completed(object sender, PhotoResult e)
         {
             if (e.TaskResult == TaskResult.OK)
             {
-                (this.DataContext as MosaicViewModel).OriginalImageData = e.ChosenPhoto;
+                takenImage = new BitmapImage();
+                takenImage.SetSource(e.ChosenPhoto);
+
+                MemoryStream ms = new MemoryStream();
+                e.ChosenPhoto.Position = 0;
+                e.ChosenPhoto.CopyTo(ms);
+                byte[] data = ms.ToArray();
+
+                WebClient wc = new WebClient();
+                wc.Headers[HttpRequestHeader.ContentType] = "multipart/form-data";
+                wc.UploadStringCompleted += new UploadStringCompletedEventHandler(wc_UploadStringCompleted);
+                wc.UploadStringAsync(new Uri("http://pictur.me/upload.ajax"), "POST", UTF8Encoding.UTF8.GetString(data, 0, data.Length), e.ChosenPhoto);
             }
         }
 
-        private void button2_Click(object sender, RoutedEventArgs e)
+        void wc_UploadStringCompleted(object sender, UploadStringCompletedEventArgs e)
         {
-            // send code to pictur.me server
-
-
-            WebRequest wr = WebRequest.Create(host + "v1/upload");
-            wr.Method = "POST";
-            wr.ContentType = "application/x-www-form-urlencoded";
-
-            RequestState rs = new RequestState()
-            {
-                webRequest = wr,
-                data = DataContext as MosaicViewModel
-            };
-
-            wr.BeginGetRequestStream(new AsyncCallback(SendData), rs);
-            NavigationService.Navigate(new Uri("/MosaicDetail.xaml", UriKind.Relative));
+            throw new NotImplementedException();
         }
 
-        private void SendData(IAsyncResult asyncResult)
+        private void imageFromCamera_Click(object sender, RoutedEventArgs e)
         {
-            RequestState rs = (RequestState)asyncResult.AsyncState;
-
-            rs.data.OriginalImageData.Position = 0; // rest position to read file in its entirety
-            MemoryStream ms = new MemoryStream();
-            rs.data.OriginalImageData.CopyTo(ms);
-            byte[] c = ms.ToArray();
-
-            Stream postStream = rs.webRequest.EndGetRequestStream(asyncResult);
-
-            postStream.Write(c, 0, c.Length);
-            postStream.Close();
-
-            rs.webRequest.BeginGetResponse(new AsyncCallback(RecieveImage), rs);
+            camera.Show();
         }
-
-        private void RecieveImage(IAsyncResult asyncResult)
-        {
-
-            RequestState rs = (RequestState)asyncResult.AsyncState;
-            WebResponse wr;
-
-            wr = (WebResponse)rs.webRequest.EndGetResponse(asyncResult);
-            Stream rStream = wr.GetResponseStream();
-            StreamReader sr = new StreamReader(rStream);
-            String res = sr.ReadToEnd();
-            rStream.Close();
-            sr.Close();
-            wr.Close();
-
-            DisplayImage(res);
-
-        }
-
-        private void DisplayImage(string res)
-        {
-            JsonValue jv = JsonArray.Parse(res);
-            if (bool.Parse(jv["success"]))
-            {
-                
-            }
-        }
-    }
-
-    public class RequestState
-    {
-        public WebRequest webRequest;
-        public MosaicViewModel data;
     }
 }
